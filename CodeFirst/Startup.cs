@@ -8,8 +8,7 @@ using HotChocolate.AspNetCore;
 using HotChocolate.AspNetCore.Voyager;
 using HotChocolate.Execution.Configuration;
 using HotChocolate.Subscriptions;
-using StarWars.Data;
-using StarWars.Types;
+using StarWars.Models;
 
 namespace StarWars
 {
@@ -19,22 +18,25 @@ namespace StarWars
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add the custom services like repositories etc ...
-            services.AddSingleton<CharacterRepository>();
-            services.AddSingleton<ReviewRepository>();
-
             // Add in-memory event provider
             services.AddInMemorySubscriptionProvider();
 
             // Add GraphQL Services
             services.AddGraphQL(sp => SchemaBuilder.New()
-                .AddServices(sp)
-                .AddQueryType<QueryType>()
-                .AddMutationType<MutationType>()
-                .AddSubscriptionType<SubscriptionType>()
-                .AddType<HumanType>()
-                .AddType<DroidType>()
-                .AddType<EpisodeType>()
+                .AddServices(sp)    
+                .AddQueryType<Query>()
+                .AddMutationType<Mutation>()
+
+                // would like to add an interferred union of ICharacter 
+                .AddUnionType<ICharacter>()
+
+                // need to add this, otherwise exception... makes sense
+                .AddType<Human>()
+                .AddType<Droid>()
+                
+                // we would also like Human and Droid to be an input type... commented out Droid to make it working... notice the union changes
+                .AddInputObjectType<Human>()
+                //.AddInputObjectType<Droid>()
                 .Create());
         }
 
@@ -49,7 +51,8 @@ namespace StarWars
             app
                 .UseRouting()
                 .UseWebSockets()
-                .UseGraphQL("/graphql");
+                .UseGraphQL()
+                .UsePlayground();
         }
     }
 }
